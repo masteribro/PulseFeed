@@ -38,6 +38,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   get_it: ^9.2.0
   get: ^4.7.3
+  equatable: ^2.0.8
 
 dev_dependencies:
   flutter_test:
