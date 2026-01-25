@@ -19,42 +19,34 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    var panel = MultiBlocProvider(
-      providers: [
-        // BlocProvider.value(
-        //   value: getIt<LocationCubit>(),
-        // ),
-
-      ],
-      child: GestureDetector(
-          onTap: () {
-            FocusScopeNode currentFocus = FocusScope.of(context);
-            if (!currentFocus.hasPrimaryFocus &&
-                currentFocus.focusedChild != null) {
-              FocusManager.instance.primaryFocus!.unfocus();
-            }
-          },
-          child: ScreenUtilInit(
-            designSize: const Size(390, 844),
-            minTextAdapt: true,
-            builder: (_, __) => MaterialApp(
-              themeMode: ThemeMode.light,
-              darkTheme: ThemeData.light(),
-              debugShowCheckedModeBanner: false,
-              // theme: theme,
-              // color: AppColors.primary,
-              builder: (context, child) {
-                return child!;
-              },
-              home: const HomePage(title: '',),
-              // navigatorObservers: <NavigatorObserver>[
-              //   AnalyticsService().getAnalyticsObserver()
-              // ],
-              // scaffoldMessengerKey:
-              // ScaffoldMessengerService.scaffoldMessengerKey,
-            ),
-          )),
-    );
+    var panel = GestureDetector(
+        onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus &&
+              currentFocus.focusedChild != null) {
+            FocusManager.instance.primaryFocus!.unfocus();
+          }
+        },
+        child: ScreenUtilInit(
+          designSize: const Size(390, 844),
+          minTextAdapt: true,
+          builder: (_, __) => MaterialApp(
+            themeMode: ThemeMode.light,
+            darkTheme: ThemeData.light(),
+            debugShowCheckedModeBanner: false,
+            // theme: theme,
+            // color: AppColors.primary,
+            builder: (context, child) {
+              return child!;
+            },
+            home: const HomePage(title: '',),
+            // navigatorObservers: <NavigatorObserver>[
+            //   AnalyticsService().getAnalyticsObserver()
+            // ],
+            // scaffoldMessengerKey:
+            // ScaffoldMessengerService.scaffoldMessengerKey,
+          ),
+        ));
 
     // if (isEligibleForSmartlook) {
     //   return SmartlookRecordingWidget(
