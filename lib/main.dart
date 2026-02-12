@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'application/home_cubit.dart';
 import 'home/home_page.dart';
+import 'ioc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +21,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    var panel = GestureDetector(
+    var panel = MultiBlocProvider(
+        providers: [
+        BlocProvider.value(
+        value: getIt<HomeCubit>(),
+    ),
+    ],
+    child: GestureDetector(
         onTap: () {
           FocusScopeNode currentFocus = FocusScope.of(context);
           if (!currentFocus.hasPrimaryFocus &&
@@ -34,25 +42,13 @@ class _MyAppState extends State<MyApp> {
             themeMode: ThemeMode.light,
             darkTheme: ThemeData.light(),
             debugShowCheckedModeBanner: false,
-            // theme: theme,
-            // color: AppColors.primary,
             builder: (context, child) {
               return child!;
             },
-            home: const HomePage(title: '',),
-            // navigatorObservers: <NavigatorObserver>[
-            //   AnalyticsService().getAnalyticsObserver()
-            // ],
-            // scaffoldMessengerKey:
-            // ScaffoldMessengerService.scaffoldMessengerKey,
+            home: const HomePage(),
           ),
-        ));
+        )));
 
-    // if (isEligibleForSmartlook) {
-    //   return SmartlookRecordingWidget(
-    //     child: panel,
-    //   );
-    // }
     return panel;
   }
 }
