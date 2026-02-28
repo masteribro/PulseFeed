@@ -7,6 +7,9 @@ import 'home/home_page.dart';
 import 'ioc.dart';
 
 void main() {
+
+  WidgetsFlutterBinding.ensureInitialized();
+
   IoC();
   runApp(const MyApp());
 

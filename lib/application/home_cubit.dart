@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pulse_audio_player/pulse_audio_player.dart';
 import 'dart:io';
 import 'home_state.dart';
 
@@ -10,9 +11,11 @@ class HomeCubit extends Cubit<HomeState> {
   static const videoChannel = MethodChannel('com.example.pulse_feed/video');
   static const documentChannel = MethodChannel('com.example.pulse_feed/document');
 
+  PulseAudioPlayer audioPlayer = PulseAudioPlayer();
+
   Future<void> playAudio(String url) async {
     try {
-      await audioChannel.invokeMethod('play', {'url': url});
+      await audioPlayer.play(url);
       emit(HomeAudioState(true));
     } catch (e) {
       emit(HomeError('Audio error: $e'));
@@ -21,7 +24,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> pauseAudio() async {
     try {
-      await audioChannel.invokeMethod('pause');
+      await audioPlayer.pause() ;
       emit(HomeAudioState(false));
     } catch (e) {
       emit(HomeError('Audio error: $e'));
@@ -30,7 +33,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> stopAudio() async {
     try {
-      await audioChannel.invokeMethod('stop');
+      await audioPlayer.stop();
       emit(HomeAudioState(false));
     } catch (e) {
       emit(HomeError('Audio error: $e'));

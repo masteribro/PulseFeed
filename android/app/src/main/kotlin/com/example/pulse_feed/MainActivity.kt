@@ -17,7 +17,6 @@ import java.net.URL
 import java.net.HttpURLConnection
 import java.io.FileOutputStream
 
-// ExoPlayer imports - ONLY ONCE!
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.StyledPlayerView
@@ -29,7 +28,7 @@ import com.google.android.exoplayer2.C
 class MainActivity : FlutterActivity() {
 
     private val AUDIO_CHANNEL = "com.example.pulse_feed/audio"
-    private val VIDEO_CHANNEL = "com.example.pulse_feed/video"
+    private val VIDEO_CHANNEL =  "com.example.pulse_feed/video"
     private val DOCUMENT_CHANNEL = "com.example.pulse_feed/document"
 
     // Audio player
