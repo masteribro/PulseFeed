@@ -7,7 +7,9 @@ import 'home/home_page.dart';
 import 'ioc.dart';
 
 void main() {
+  IoC();
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatefulWidget {
@@ -45,7 +47,7 @@ class _MyAppState extends State<MyApp> {
             builder: (context, child) {
               return child!;
             },
-            home: const HomePage(),
+            home: HomePage(),
           ),
         )));
 
