@@ -1,17 +1,33 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pulse_audio_player/pulse_audio_player.dart';
-import 'dart:io';
+import 'package:pulse_document_viewer/pulse_document_viewer.dart';
+import 'package:pulse_video_player/pulse_video_player.dart';
 import 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeInitial());
 
-  static const audioChannel = MethodChannel('com.example.pulse_feed/audio');
-  static const videoChannel = MethodChannel('com.example.pulse_feed/video');
-  static const documentChannel = MethodChannel('com.example.pulse_feed/document');
 
-  PulseAudioPlayer audioPlayer = PulseAudioPlayer();
+  PulseAudioPlayer? _audioPlayer;
+  PulseVideoPlayer? _videoPlayer;
+  PulseDocumentViewer? _documentViewer;
+
+  // Getters with lazy initialization
+  PulseAudioPlayer get audioPlayer {
+    _audioPlayer ??= PulseAudioPlayer();
+    return _audioPlayer!;
+  }
+
+  PulseVideoPlayer get videoPlayer {
+    _videoPlayer ??= PulseVideoPlayer();
+    return _videoPlayer!;
+  }
+
+  PulseDocumentViewer get documentViewer {
+    _documentViewer ??= PulseDocumentViewer();
+    return _documentViewer!;
+  }
 
   Future<void> playAudio(String url) async {
     try {
@@ -24,7 +40,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> pauseAudio() async {
     try {
-      await audioPlayer.pause() ;
+      await audioPlayer.pause();
       emit(HomeAudioState(false));
     } catch (e) {
       emit(HomeError('Audio error: $e'));
@@ -42,7 +58,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> playVideo(String url) async {
     try {
-      await videoChannel.invokeMethod('play', {'url': url});
+      await videoPlayer.play(url);
       emit(HomeVideoState(true));
     } catch (e) {
       emit(HomeError('Video error: $e'));
@@ -51,7 +67,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> pauseVideo() async {
     try {
-      await videoChannel.invokeMethod('pause');
+      await videoPlayer.pause();
       emit(HomeVideoState(false));
     } catch (e) {
       emit(HomeError('Video error: $e'));
@@ -60,7 +76,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> stopVideo() async {
     try {
-      await videoChannel.invokeMethod('stop');
+      await videoPlayer.stop();
       emit(HomeVideoState(false));
     } catch (e) {
       emit(HomeError('Video error: $e'));
@@ -71,13 +87,16 @@ class HomeCubit extends Cubit<HomeState> {
     try {
       emit(HomeDocumentState(isLoading: true));
 
-      // Download the file
-      final filePath = await _downloadFile(url, fileName);
+      final filePath = await documentViewer.downloadDocument(url, fileName);
 
       if (filePath != null) {
-        // Open the document
-        await documentChannel.invokeMethod('open', {'path': filePath});
-        emit(HomeDocumentState(isViewing: true, filePath: filePath));
+        final opened = await documentViewer.openDocument(filePath);
+
+        if (opened) {
+          emit(HomeDocumentState(isViewing: true, filePath: filePath));
+        } else {
+          emit(HomeDocumentState(error: 'Failed to open document'));
+        }
       } else {
         emit(HomeDocumentState(error: 'Failed to download document. Please check the URL.'));
       }
@@ -86,49 +105,19 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<String?> _downloadFile(String url, String fileName) async {
-    try {
-      // Get temporary directory path from Android
-      final tempDir = await documentChannel.invokeMethod<String>('getTempDir');
-      if (tempDir == null) return null;
-
-      final file = File('$tempDir/$fileName');
-
-      // Download file
-      final httpClient = HttpClient();
-      final request = await httpClient.getUrl(Uri.parse(url));
-      final response = await request.close();
-
-      if (response.statusCode == 200) {
-        await response.pipe(file.openWrite());
-        return file.path;
-      } else {
-        print('Download failed with status: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Download error: $e');
-      return null;
-    }
-  }
-
   Future<void> downloadDocument(String url, String fileName) async {
     try {
       emit(HomeDocumentState(isLoading: true));
 
-      final filePath = await documentChannel.invokeMethod<String>(
-        'download',
-        {'url': url, 'fileName': fileName},
-      );
+      final filePath = await documentViewer.downloadDocument(url, fileName);
 
       if (filePath != null) {
         emit(HomeDocumentState(
-          isViewing: true,
+          isViewing: false,
           filePath: filePath,
         ));
-
-        // Open the downloaded document
-        await documentChannel.invokeMethod('open', {'path': filePath});
+      } else {
+        emit(HomeDocumentState(error: 'Failed to download document'));
       }
     } catch (e) {
       emit(HomeError('Download error: $e'));
@@ -137,9 +126,22 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> openDocument(String path) async {
     try {
-      await documentChannel.invokeMethod('open', {'path': path});
+      final opened = await documentViewer.openDocument(path);
+      if (opened) {
+        emit(HomeDocumentState(isViewing: true, filePath: path));
+      } else {
+        emit(HomeError('Failed to open document'));
+      }
     } catch (e) {
       emit(HomeError('Open error: $e'));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _audioPlayer?.dispose();
+    _videoPlayer?.dispose();
+    _documentViewer?.dispose();
+    return super.close();
   }
 }

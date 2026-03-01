@@ -354,6 +354,20 @@ packages:
       relative: false
     source: path
     version: "0.0.1"
+  pulse_document_viewer:
+    dependency: "direct main"
+    description:
+      path: "/Users/ibrahimmohammed/StudioProjects/pulse_feed/pulse_document_viewer"
+      relative: false
+    source: path
+    version: "0.0.1"
+  pulse_video_player:
+    dependency: "direct main"
+    description:
+      path: "/Users/ibrahimmohammed/StudioProjects/pulse_feed/pulse_video_player"
+      relative: false
+    source: path
+    version: "0.0.1"
   sky_engine:
     dependency: transitive
     description: flutter
