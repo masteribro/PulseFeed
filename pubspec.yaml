@@ -23,7 +23,7 @@ dependencies:
     path: /Users/ibrahimmohammed/StudioProjects/pulse_feed/pulse_audio_player
   pulse_video_player:
     path: /Users/ibrahimmohammed/StudioProjects/pulse_feed/pulse_video_player
-  pulse_document_viewer: # Add this
+  pulse_document_viewer:
     path: /Users/ibrahimmohammed/StudioProjects/pulse_feed/pulse_document_viewer
 dev_dependencies:
   flutter_test:

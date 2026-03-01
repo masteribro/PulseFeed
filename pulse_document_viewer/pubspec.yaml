@@ -37,6 +37,8 @@ flutter:
       android:
         package: com.example.pulse_document_viewer
         pluginClass: PulseDocumentViewerPlugin
+      ios:
+        pluginClass: PulseDocumentViewerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

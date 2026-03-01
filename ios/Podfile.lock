@@ -1,0 +1,34 @@
+PODS:
+  - Flutter (1.0.0)
+  - pulse_audio_player (0.0.1):
+    - Flutter
+  - pulse_document_viewer (0.0.1):
+    - Flutter
+  - pulse_video_player (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - pulse_audio_player (from `.symlinks/plugins/pulse_audio_player/ios`)
+  - pulse_document_viewer (from `.symlinks/plugins/pulse_document_viewer/ios`)
+  - pulse_video_player (from `.symlinks/plugins/pulse_video_player/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  pulse_audio_player:
+    :path: ".symlinks/plugins/pulse_audio_player/ios"
+  pulse_document_viewer:
+    :path: ".symlinks/plugins/pulse_document_viewer/ios"
+  pulse_video_player:
+    :path: ".symlinks/plugins/pulse_video_player/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  pulse_audio_player: a1867fc3e3d0e00042bde05b3f2130c3fc57b805
+  pulse_document_viewer: 3f2d0ed83a3e7dbbc3c4825b41dbdb31b9e1563a
+  pulse_video_player: c6608c11dcfd55b7d79729f499b74626f0018bf5
+
+PODFILE CHECKSUM: 3056943b73403032929330845d87aac4752462ac
+
+COCOAPODS: 1.16.2

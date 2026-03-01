@@ -37,6 +37,8 @@ flutter:
       android:
         package: com.example.pulse_video_player
         pluginClass: PulseVideoPlayerPlugin
+      ios:
+        pluginClass: PulseVideoPlayerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
