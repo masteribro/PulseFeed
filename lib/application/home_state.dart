@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-// States
 abstract class HomeState extends Equatable {
   const HomeState();
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../application/home_cubit.dart';
-import '../../application/home_state.dart';
+import 'media_preview.dart';
 
 enum MediaType { video, audio, document, text }
 
@@ -33,7 +31,11 @@ class FeedCard extends StatelessWidget {
               height: 150,
               width: double.infinity,
               color: Colors.grey[300],
-              child: _buildMediaPreview(context),
+              child: MediaPreview(
+                type: type,
+                mediaUrl: mediaUrl,
+                fileName: fileName,
+              ),
             ),
 
           Padding(
@@ -93,106 +95,4 @@ class FeedCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMediaPreview(BuildContext context) {
-    switch (type) {
-      case MediaType.video:
-        return Center(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              final isPlaying = state is HomeVideoState && state.isPlaying;
-              return IconButton(
-                icon: Icon(
-                  isPlaying ? Icons.pause_circle : Icons.play_circle,
-                  size: 50,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  if (mediaUrl != null) {
-                    if (isPlaying) {
-                      context.read<HomeCubit>().pauseVideo();
-                    } else {
-                      context.read<HomeCubit>().playVideo(mediaUrl!);
-                    }
-                  }
-                },
-              );
-            },
-          ),
-        );
-
-      case MediaType.audio:
-        return Center(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              final isPlaying = state is HomeAudioState && state.isPlaying;
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      isPlaying ? Icons.pause : Icons.play_arrow,
-                      size: 40,
-                    ),
-                    onPressed: () {
-                      if (mediaUrl != null) {
-                        if (isPlaying) {
-                          context.read<HomeCubit>().pauseAudio();
-                        } else {
-                          context.read<HomeCubit>().playAudio(mediaUrl!);
-                        }
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.stop, size: 40),
-                    onPressed: () {
-                      context.read<HomeCubit>().stopAudio();
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-
-      case MediaType.document:
-        return Center(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              final docState = state is HomeDocumentState ? state : null;
-
-              if (docState?.isLoading == true) {
-                return const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 8),
-                    Text('Loading document...'),
-                  ],
-                );
-              }
-
-              // Show view button
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.picture_as_pdf, size: 40, color: Colors.red),
-                    onPressed: () {
-                      if (mediaUrl != null && fileName != null) {
-                        context.read<HomeCubit>().viewDocument(mediaUrl!, fileName!);
-                      }
-                    },
-                  ),
-                  const Text('View PDF', style: TextStyle(fontSize: 12)),
-                ],
-              );
-            },
-          ),
-        );
-
-      case MediaType.text:
-        return const SizedBox.shrink();
-    }
-  }
 }
