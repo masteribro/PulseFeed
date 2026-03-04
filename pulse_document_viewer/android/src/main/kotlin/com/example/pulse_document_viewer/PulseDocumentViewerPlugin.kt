@@ -114,7 +114,6 @@ class PulseDocumentViewerPlugin : FlutterPlugin, MethodCallHandler, ActivityAwar
                     outputStream.write(buffer, 0, bytesRead)
                     totalBytes += bytesRead
 
-                    // Send progress to Flutter
                     if (fileLength > 0) {
                         val progress = (totalBytes * 100 / fileLength).toInt()
                         mainHandler.post {

@@ -39,7 +39,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Get the temporary directory path
   Future<String?> getTempDir() async {
     try {
       return await _channel.invokeMethod<String>('getTempDir');
@@ -49,7 +48,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Download a document from URL
   Future<String?> downloadDocument(String url, String fileName) async {
     try {
       _isDownloading = true;
@@ -79,7 +77,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Open a document from file path
   Future<bool> openDocument(String path) async {
     try {
       final result = await _channel.invokeMethod<bool>(
@@ -93,7 +90,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Convenience method: download and open a document
   Future<bool> viewDocument(String url, String fileName) async {
     try {
       _eventController.add(DocumentEvent.started);
@@ -114,7 +110,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Check if a file exists
   Future<bool> fileExists(String path) async {
     try {
       return await _channel.invokeMethod<bool>(
@@ -127,7 +122,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Delete a file
   Future<bool> deleteFile(String path) async {
     try {
       return await _channel.invokeMethod<bool>(
@@ -140,7 +134,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Cancel current download
   Future<void> cancelDownload() async {
     try {
       await _channel.invokeMethod('cancelDownload');
@@ -152,7 +145,6 @@ class PulseDocumentViewer {
     }
   }
 
-  /// Dispose the document viewer
   Future<void> dispose() async {
     await _eventController.close();
   }

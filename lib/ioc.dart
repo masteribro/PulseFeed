@@ -5,17 +5,6 @@ var getIt = GetIt.instance;
 
 class IoC {
   void initServices() {
-    // ============================================
-    // STEP 1: REGISTER ALL CLIENTS AS SINGLETONS FIRST
-    // This enables proper dependency injection and testability
-    // ============================================
-
-
-    // ============================================
-    // STEP 2: REGISTER SERVICES WITH INJECTED CLIENTS
-    // Services receive clients via constructor injection from GetIt
-    // ============================================
-
 
   }
 

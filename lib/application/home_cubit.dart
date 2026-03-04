@@ -11,6 +11,7 @@ class HomeCubit extends Cubit<HomeState> {
   PulseAudioPlayer? _audioPlayer;
   PulseVideoPlayer? _videoPlayer;
   PulseDocumentViewer? _documentViewer;
+  String? _currentVideoUrl;
 
   // Getters with lazy initialization
   PulseAudioPlayer get audioPlayer {
@@ -55,8 +56,11 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+
+
   Future<void> playVideo(String url) async {
     try {
+      _currentVideoUrl = url;
       await videoPlayer.play(url);
       emit(HomeVideoState(true));
     } catch (e) {
@@ -76,6 +80,7 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> stopVideo() async {
     try {
       await videoPlayer.stop();
+      _currentVideoUrl = null;
       emit(HomeVideoState(false));
     } catch (e) {
       emit(HomeError('Video error: $e'));
@@ -135,6 +140,31 @@ class HomeCubit extends Cubit<HomeState> {
       emit(HomeError('Open error: $e'));
     }
   }
+
+  Future<void> seekVideo(Duration position) async {
+    try {
+      await videoPlayer.seekTo(position);
+    } catch (e) {
+      emit(HomeError('Video seek error: $e'));
+    }
+  }
+
+  Future<void> setVideoVolume(double volume) async {
+    try {
+      await videoPlayer.setVolume(volume);
+    } catch (e) {
+      emit(HomeError('Video volume error: $e'));
+    }
+  }
+
+  Future<void> setVideoSpeed(double speed) async {
+    try {
+      await videoPlayer.setPlaybackSpeed(speed);
+    } catch (e) {
+      emit(HomeError('Video speed error: $e'));
+    }
+  }
+
 
   @override
   Future<void> close() {
