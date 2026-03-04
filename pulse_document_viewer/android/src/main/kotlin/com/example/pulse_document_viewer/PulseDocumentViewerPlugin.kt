@@ -1,10 +1,13 @@
 package com.example.pulse_document_viewer
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.ParcelFileDescriptor
 import android.webkit.MimeTypeMap
 import android.util.Log
 import androidx.annotation.NonNull
@@ -21,6 +24,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -32,6 +36,9 @@ class PulseDocumentViewerPlugin : FlutterPlugin, MethodCallHandler, ActivityAwar
 
     private var downloadFuture: Future<*>? = null
     private var isDownloadCancelled = false
+
+    private val pdfRenderers = ConcurrentHashMap<String, PdfRenderer>()
+    private val pdfFileDescriptors = ConcurrentHashMap<String, ParcelFileDescriptor>()
 
     override fun onAttachedToEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(binding.binaryMessenger, "pulse_document_viewer")
@@ -62,6 +69,35 @@ class PulseDocumentViewerPlugin : FlutterPlugin, MethodCallHandler, ActivityAwar
                     result.error("INVALID_ARGUMENTS", "Path is required", null)
                 }
             }
+            "getPageCount" -> {
+                val path = call.argument<String>("path")
+                if (path != null) {
+                    getPageCount(path, result)
+                } else {
+                    result.error("INVALID_ARGUMENTS", "Path is required", null)
+                }
+            }
+            "renderPage" -> {
+                val path = call.argument<String>("path")
+                val pageIndex = call.argument<Int>("pageIndex")
+                val width = call.argument<Int>("width") ?: 800
+                val height = call.argument<Int>("height") ?: 1200
+
+                if (path != null && pageIndex != null) {
+                    renderPage(path, pageIndex, width, height, result)
+                } else {
+                    result.error("INVALID_ARGUMENTS", "Path and pageIndex are required", null)
+                }
+            }
+            "closeDocument" -> {
+                val path = call.argument<String>("path")
+                if (path != null) {
+                    closeDocument(path)
+                    result.success(true)
+                } else {
+                    result.error("INVALID_ARGUMENTS", "Path is required", null)
+                }
+            }
             "fileExists" -> {
                 val path = call.argument<String>("path")
                 if (path != null) {
@@ -86,6 +122,74 @@ class PulseDocumentViewerPlugin : FlutterPlugin, MethodCallHandler, ActivityAwar
                 result.success(true)
             }
             else -> result.notImplemented()
+        }
+    }
+
+    private fun getPageCount(path: String, result: Result) {
+        try {
+            val renderer = getOrCreatePdfRenderer(path)
+            val pageCount = renderer.pageCount
+            result.success(pageCount)
+        } catch (e: Exception) {
+            Log.e("DocumentPlugin", "Error getting page count", e)
+            result.error("PDF_ERROR", e.message, null)
+        }
+    }
+
+    private fun renderPage(path: String, pageIndex: Int, width: Int, height: Int, result: Result) {
+        try {
+            val renderer = getOrCreatePdfRenderer(path)
+
+            if (pageIndex < 0 || pageIndex >= renderer.pageCount) {
+                result.error("INVALID_PAGE", "Page index out of bounds", null)
+                return
+            }
+
+            val page = renderer.openPage(pageIndex)
+
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+            val stream = java.io.ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val byteArray = stream.toByteArray()
+
+            page.close()
+            bitmap.recycle()
+
+            result.success(byteArray)
+        } catch (e: Exception) {
+            Log.e("DocumentPlugin", "Error rendering page", e)
+            result.error("RENDER_ERROR", e.message, null)
+        }
+    }
+
+    @Synchronized
+    private fun getOrCreatePdfRenderer(path: String): PdfRenderer {
+        var renderer = pdfRenderers[path]
+
+        if (renderer == null) {
+            val file = File(path)
+            val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            renderer = PdfRenderer(pfd)
+
+            pdfRenderers[path] = renderer
+            pdfFileDescriptors[path] = pfd
+        }
+
+        return renderer
+    }
+
+    private fun closeDocument(path: String) {
+        try {
+            pdfRenderers[path]?.close()
+            pdfRenderers.remove(path)
+
+            pdfFileDescriptors[path]?.close()
+            pdfFileDescriptors.remove(path)
+        } catch (e: Exception) {
+            Log.e("DocumentPlugin", "Error closing document", e)
         }
     }
 
@@ -194,9 +298,15 @@ class PulseDocumentViewerPlugin : FlutterPlugin, MethodCallHandler, ActivityAwar
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        // Close all open PDF renderers
+        pdfRenderers.values.forEach { it.close() }
+        pdfRenderers.clear()
+
+        pdfFileDescriptors.values.forEach { it.close() }
+        pdfFileDescriptors.clear()
+
         channel.setMethodCallHandler(null)
     }
-
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity

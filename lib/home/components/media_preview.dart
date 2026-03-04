@@ -5,7 +5,7 @@ import '../../application/home_cubit.dart';
 import '../../application/home_state.dart';
 import 'audio_preview.dart';
 import 'document_preview.dart';
-import 'feed_card.dart'; // for MediaType enum (or move enum to separate file)
+import 'feed_card.dart';
 
 class MediaPreview extends StatelessWidget {
   final MediaType type;

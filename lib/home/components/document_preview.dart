@@ -1,11 +1,8 @@
-import 'dart:ui';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../application/home_cubit.dart';
 import '../../application/home_state.dart';
+import 'flip_doc_viewer.dart';
 
 class DocumentPreview extends StatelessWidget {
   final String? mediaUrl;
@@ -43,11 +40,26 @@ class DocumentPreview extends StatelessWidget {
                   size: 40,
                   color: Colors.red,
                 ),
-                onPressed: () {
-                  if (mediaUrl != null && fileName != null) {
-                    context
-                        .read<HomeCubit>()
-                        .viewDocument(mediaUrl!, fileName!);
+                onPressed: () async {
+                  const assetPath = 'assets/docs/Mohammed_Ibrahim_CV.pdf';
+
+                  // Load document and get file path
+                  final filePath = await context
+                      .read<HomeCubit>()
+                      .documentViewer
+                      .loadDocumentFromAssets(assetPath, fileName ?? 'document.pdf');
+
+                  if (filePath != null && context.mounted) {
+                    // Navigate to custom document viewer
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FlipDocViewer(
+                          filePath: filePath,
+                          fileName: fileName ?? 'Document',
+                        ),
+                      ),
+                    );
                   }
                 },
               ),
