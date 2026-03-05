@@ -25,23 +25,24 @@ class _FlipDocViewerState extends State<FlipDocViewer> {
   Map<int, Uint8List?> _pageCache = {};
   bool _isControlsVisible = true;
 
+  late final HomeCubit _homeCubit;
+
   @override
   void initState() {
     super.initState();
+    _homeCubit = context.read<HomeCubit>();
     _loadDocumentInfo();
   }
 
   @override
   void dispose() {
-    context.read<HomeCubit>().documentViewer.closeDocument(widget.filePath);
+    _homeCubit.documentViewer.closeDocument(widget.filePath);
     _pageController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDocumentInfo() async {
-    final documentViewer = context.read<HomeCubit>().documentViewer;
-
-    final totalPages = await documentViewer.getPageCount(widget.filePath);
+    final totalPages = await _homeCubit.documentViewer.getPageCount(widget.filePath);
 
     if (mounted) {
       setState(() {
@@ -56,10 +57,8 @@ class _FlipDocViewerState extends State<FlipDocViewer> {
   Future<void> _loadPage(int pageIndex) async {
     if (_pageCache.containsKey(pageIndex)) return;
 
-    final documentViewer = context.read<HomeCubit>().documentViewer;
-
     final size = MediaQuery.of(context).size;
-    final pageData = await documentViewer.renderPage(
+    final pageData = await _homeCubit.documentViewer.renderPage(
       widget.filePath,
       pageIndex,
       width: size.width.toDouble(),
