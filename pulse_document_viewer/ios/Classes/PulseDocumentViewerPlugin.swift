@@ -1,12 +1,16 @@
 import Flutter
 import UIKit
 import QuickLook
+import PDFKit
 
 public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
     private var channel: FlutterMethodChannel?
     private var documentUrl: URL?
     private var downloadTask: URLSessionDownloadTask?
     private var downloadProgress: Float = 0.0
+
+    private var pdfDocuments: [String: PDFDocument] = [:]
+    private var pdfDocumentRefs: [String: PDFDocument] = [:]
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "pulse_document_viewer", binaryMessenger: registrar.messenger())
@@ -34,6 +38,34 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
             if let args = call.arguments as? [String: Any],
                let path = args["path"] as? String {
                 openDocument(path: path, result: result)
+            } else {
+                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Path is required", details: nil))
+            }
+
+        case "getPageCount":
+            if let args = call.arguments as? [String: Any],
+               let path = args["path"] as? String {
+                getPageCount(path: path, result: result)
+            } else {
+                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Path is required", details: nil))
+            }
+
+        case "renderPage":
+            if let args = call.arguments as? [String: Any],
+               let path = args["path"] as? String,
+               let pageIndex = args["pageIndex"] as? Int {
+                let width = args["width"] as? Int ?? 800
+                let height = args["height"] as? Int ?? 1200
+                renderPage(path: path, pageIndex: pageIndex, width: width, height: height, result: result)
+            } else {
+                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Path and pageIndex are required", details: nil))
+            }
+
+        case "closeDocument":
+            if let args = call.arguments as? [String: Any],
+               let path = args["path"] as? String {
+                closeDocument(path: path)
+                result(true)
             } else {
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Path is required", details: nil))
             }
@@ -70,11 +102,61 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
         }
     }
 
+    private func getPageCount(path: String, result: @escaping FlutterResult) {
+        let fileURL = URL(fileURLWithPath: path)
+
+        guard FileManager.default.fileExists(atPath: path) else {
+            result(FlutterError(code: "FILE_NOT_FOUND", message: "File does not exist", details: nil))
+            return
+        }
+
+        if let pdfDocument = PDFDocument(url: fileURL) {
+            pdfDocuments[path] = pdfDocument
+            result(pdfDocument.pageCount)
+        } else {
+            result(FlutterError(code: "PDF_ERROR", message: "Failed to load PDF", details: nil))
+        }
+    }
+
+    private func renderPage(path: String, pageIndex: Int, width: Int, height: Int, result: @escaping FlutterResult) {
+        let fileURL = URL(fileURLWithPath: path)
+
+        var pdfDocument = pdfDocuments[path]
+        if pdfDocument == nil {
+            pdfDocument = PDFDocument(url: fileURL)
+            if pdfDocument != nil {
+                pdfDocuments[path] = pdfDocument
+            }
+        }
+
+        guard let document = pdfDocument, pageIndex >= 0 && pageIndex < document.pageCount else {
+            result(FlutterError(code: "INVALID_PAGE", message: "Page index out of bounds", details: nil))
+            return
+        }
+
+        guard let page = document.page(at: pageIndex) else {
+            result(FlutterError(code: "PAGE_ERROR", message: "Failed to get page", details: nil))
+            return
+        }
+
+        let thumbnailSize = CGSize(width: CGFloat(width), height: CGFloat(height))
+        let thumbnail = page.thumbnail(of: thumbnailSize, for: .mediaBox)
+
+        if let imageData = thumbnail.pngData() {
+            result(imageData)
+        } else {
+            result(FlutterError(code: "RENDER_ERROR", message: "Failed to render page", details: nil))
+        }
+    }
+
+    private func closeDocument(path: String) {
+        pdfDocuments.removeValue(forKey: path)
+    }
+
     private func getRootViewController() -> UIViewController? {
         if #available(iOS 13.0, *) {
             return getRootViewControllerIOS13()
         } else {
-            // iOS 12 and below
             return UIApplication.shared.keyWindow?.rootViewController
         }
     }
@@ -114,7 +196,6 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
                 return
             }
 
-            // Move file to documents directory
             let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
             let destinationURL = documentsURL.appendingPathComponent(fileName)
 
@@ -136,7 +217,6 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
             }
         }
 
-        // Add progress observer
         let progressObserver = downloadTask?.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
             self?.downloadProgress = Float(progress.fractionCompleted)
             DispatchQueue.main.async {
@@ -145,8 +225,6 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
         }
 
         downloadTask?.resume()
-
-        // Store observer to keep it alive
         objc_setAssociatedObject(downloadTask!, "progressObserver", progressObserver, .OBJC_ASSOCIATION_RETAIN)
     }
 
@@ -163,7 +241,6 @@ public class PulseDocumentViewerPlugin: NSObject, FlutterPlugin, QLPreviewContro
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
-            // Get the root view controller using our safe method
             guard let rootViewController = self.getRootViewController() else {
                 result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Could not find root view controller", details: nil))
                 return

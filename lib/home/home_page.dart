@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../application/home_cubit.dart';
 import '../application/home_state.dart';
 import 'components/feed_card.dart';
@@ -22,10 +23,9 @@ class HomePage extends StatelessWidget {
     },
     {
       'type': MediaType.document,
-      'title': 'TechDocs',
-      'description': 'Important notes from today\'s meeting 📄 #Work',
-      'mediaUrl': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      'fileName': 'meeting_notes.pdf',
+      'title': 'My CV',
+      'description': 'Mohammed Ibrahim\'s CV 📄',
+      'fileName': 'Mohammed_Ibrahim_CV.pdf',
     },
     {
       'type': MediaType.text,
@@ -62,18 +62,21 @@ class HomePage extends StatelessWidget {
             );
           }
         },
-        child: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return FeedCard(
-              type: item['type'],
-              title: item['title'],
-              description: item['description'],
-              mediaUrl: item['mediaUrl'],
-              fileName: item['fileName'],
-            );
-          },
+        child: Padding(
+          padding:  EdgeInsets.only(top: 5.h),
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return FeedCard(
+                type: item['type'],
+                title: item['title'],
+                description: item['description'],
+                mediaUrl: item['mediaUrl'],
+                fileName: item['fileName'],
+              );
+            },
+          ),
         ),
       ),
     );

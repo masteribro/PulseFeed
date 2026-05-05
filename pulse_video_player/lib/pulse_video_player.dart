@@ -48,7 +48,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Play video from URL
   Future<bool> play(String url) async {
     try {
       final result = await _channel.invokeMethod<bool>('play', {'url': url});
@@ -60,7 +59,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Pause current video
   Future<bool> pause() async {
     try {
       final result = await _channel.invokeMethod<bool>('pause');
@@ -72,7 +70,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Stop current video
   Future<bool> stop() async {
     try {
       final result = await _channel.invokeMethod<bool>('stop');
@@ -87,7 +84,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Seek to position
   Future<bool> seekTo(Duration position) async {
     try {
       final result = await _channel.invokeMethod<bool>(
@@ -115,7 +111,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Set playback speed
   Future<bool> setPlaybackSpeed(double speed) async {
     try {
       final result = await _channel.invokeMethod<bool>(
@@ -129,7 +124,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Set looping
   Future<bool> setLooping(bool loop) async {
     try {
       final result = await _channel.invokeMethod<bool>(
@@ -143,7 +137,6 @@ class PulseVideoPlayer {
     }
   }
 
-  /// Dispose the player
   Future<void> dispose() async {
     await _channel.invokeMethod('dispose');
     await _eventController.close();

@@ -12,7 +12,7 @@ A Flutter plugin for downloading and viewing documents on iOS
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.frameworks = 'QuickLook'
+  s.frameworks = 'QuickLook', 'PDFKit'
   s.platform = :ios, '13.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'

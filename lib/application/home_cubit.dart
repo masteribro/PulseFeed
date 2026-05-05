@@ -7,10 +7,10 @@ import 'home_state.dart';
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeInitial());
 
-
   PulseAudioPlayer? _audioPlayer;
   PulseVideoPlayer? _videoPlayer;
   PulseDocumentViewer? _documentViewer;
+  String? _currentVideoUrl;
 
   // Getters with lazy initialization
   PulseAudioPlayer get audioPlayer {
@@ -55,8 +55,11 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+
+
   Future<void> playVideo(String url) async {
     try {
+      _currentVideoUrl = url;
       await videoPlayer.play(url);
       emit(HomeVideoState(true));
     } catch (e) {
@@ -76,9 +79,32 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> stopVideo() async {
     try {
       await videoPlayer.stop();
+      _currentVideoUrl = null;
       emit(HomeVideoState(false));
     } catch (e) {
       emit(HomeError('Video error: $e'));
+    }
+  }
+
+  Future<void> viewDocumentFromAssets(String assetPath, String fileName) async {
+    try {
+      emit(HomeDocumentState(isLoading: true));
+
+      final filePath = await documentViewer.loadDocumentFromAssets(assetPath, fileName);
+
+      if (filePath != null) {
+        final opened = await documentViewer.openDocument(filePath);
+
+        if (opened) {
+          emit(HomeDocumentState(isViewing: true, filePath: filePath));
+        } else {
+          emit(HomeDocumentState(error: 'Failed to open document'));
+        }
+      } else {
+        emit(HomeDocumentState(error: 'Failed to load document from assets.'));
+      }
+    } catch (e) {
+      emit(HomeError('Document error: $e'));
     }
   }
 
@@ -104,11 +130,11 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<void> downloadDocument(String url, String fileName) async {
+  Future<void> loadDocumentFromAssets(String assetPath, String fileName) async {
     try {
       emit(HomeDocumentState(isLoading: true));
 
-      final filePath = await documentViewer.downloadDocument(url, fileName);
+      final filePath = await documentViewer.loadDocumentFromAssets(assetPath, fileName);
 
       if (filePath != null) {
         emit(HomeDocumentState(
@@ -116,10 +142,10 @@ class HomeCubit extends Cubit<HomeState> {
           filePath: filePath,
         ));
       } else {
-        emit(HomeDocumentState(error: 'Failed to download document'));
+        emit(HomeDocumentState(error: 'Failed to load document from assets'));
       }
     } catch (e) {
-      emit(HomeError('Download error: $e'));
+      emit(HomeError('Load error: $e'));
     }
   }
 
@@ -133,6 +159,31 @@ class HomeCubit extends Cubit<HomeState> {
       }
     } catch (e) {
       emit(HomeError('Open error: $e'));
+    }
+  }
+
+  // Video control methods...
+  Future<void> seekVideo(Duration position) async {
+    try {
+      await videoPlayer.seekTo(position);
+    } catch (e) {
+      emit(HomeError('Video seek error: $e'));
+    }
+  }
+
+  Future<void> setVideoVolume(double volume) async {
+    try {
+      await videoPlayer.setVolume(volume);
+    } catch (e) {
+      emit(HomeError('Video volume error: $e'));
+    }
+  }
+
+  Future<void> setVideoSpeed(double speed) async {
+    try {
+      await videoPlayer.setPlaybackSpeed(speed);
+    } catch (e) {
+      emit(HomeError('Video speed error: $e'));
     }
   }
 
