@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
       'type': MediaType.video,
       'title': 'VideoChannel',
       'description': 'Watch this cute cat doing tricks 🐱 #Cats #Funny',
-      'mediaUrl': 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      'mediaUrl': "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4",
     },
     {
       'type': MediaType.audio,
