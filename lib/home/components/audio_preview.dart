@@ -16,17 +16,32 @@ class AudioPreview extends StatelessWidget {
       child: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
           final isPlaying = state is HomeAudioState && state.isPlaying;
+          final isLoading = state is HomeAudioState && state.isLoading;
 
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (isLoading)
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                ),
+              if (!isLoading)
               IconButton(
                 icon: Icon(
                   isPlaying ? Icons.pause : Icons.play_arrow,
                   size: 40,
                 ),
                 onPressed: () {
-                  if (mediaUrl == null) return;
+                  print('[AudioPreview] play/pause tapped | mediaUrl: $mediaUrl | isPlaying: $isPlaying');
+                  if (mediaUrl == null) {
+                    print('[AudioPreview] mediaUrl is null, aborting');
+                    return;
+                  }
 
                   if (isPlaying) {
                     context.read<HomeCubit>().pauseAudio();

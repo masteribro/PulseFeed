@@ -3,46 +3,55 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../application/home_cubit.dart';
 import '../application/home_state.dart';
+import '../data/media_storage.dart';
 import 'components/feed_card.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-  final List<Map<String, dynamic>> items = [
-    {
-      'type': MediaType.video,
-      'title': 'VideoChannel',
-      'description': 'Watch this cute cat doing tricks 🐱 #Cats #Funny',
-      'mediaUrl': "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4",
-    },
-    {
-      'type': MediaType.audio,
-      'title': 'PodcastDaily',
-      'description': 'Start your day with this amazing podcast ☀️ #MorningMotivation',
-      'mediaUrl': 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    },
-    {
-      'type': MediaType.document,
-      'title': 'My CV',
-      'description': 'Mohammed Ibrahim\'s CV 📄',
-      'fileName': 'Mohammed_Ibrahim_CV.pdf',
-    },
-    {
-      'type': MediaType.text,
-      'title': 'DailyThoughts',
-      'description': 'Just finished building this awesome app! 🚀\n\nFeeling proud of what we\'ve accomplished. The journey of learning Flutter has been amazing.\n\n#FlutterDev #MobileApps #CodingLife',
-    },
-    {
-      'type': MediaType.text,
-      'title': 'WeatherUpdate',
-      'description': 'Beautiful sunny day here in California! ☀️ 75°F and perfect for coding.',
-    },
-    {
-      'type': MediaType.text,
-      'title': 'TechNews',
-      'description': 'Breaking: New Flutter version just dropped! Check out the amazing new features 🔥',
-    },
-  ];
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  static const String _baseUrl = 'http://localhost:8080';
+
+  String _resolveUrl(String url) {
+    if (url.startsWith('/')) return '$_baseUrl$url';
+    return url;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<HomeCubit>().fetchFeed();
+  }
+
+  MediaType _toMediaType(String mediaType) {
+    switch (mediaType.toLowerCase()) {
+      case 'video':
+        return MediaType.video;
+      case 'audio':
+        return MediaType.audio;
+      case 'document':
+        return MediaType.document;
+      default:
+        return MediaType.text;
+    }
+  }
+
+  String _toTitle(MediaStorage item) {
+    switch (item.mediaType.toLowerCase()) {
+      case 'video':
+        return 'VideoChannel';
+      case 'audio':
+        return 'PodcastDaily';
+      case 'document':
+        return 'My CV';
+      default:
+        return 'User${item.id}';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,21 +71,38 @@ class HomePage extends StatelessWidget {
             );
           }
         },
-        child: Padding(
-          padding:  EdgeInsets.only(top: 5.h),
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return FeedCard(
-                type: item['type'],
-                title: item['title'],
-                description: item['description'],
-                mediaUrl: item['mediaUrl'],
-                fileName: item['fileName'],
+        child: BlocBuilder<HomeCubit, HomeState>(
+          buildWhen: (previous, current) =>
+              current is HomeFeedLoading ||
+              current is HomeFeedLoaded,
+          builder: (context, state) {
+            if (state is HomeFeedLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is HomeFeedLoaded) {
+              final items = state.items;
+              return Padding(
+                padding: EdgeInsets.only(top: 5.h),
+                child: ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    final type = _toMediaType(item.mediaType);
+                    return FeedCard(
+                      type: type,
+                      title: _toTitle(item),
+                      description: item.text.isEmpty ? null : item.text,
+                      mediaUrl: item.url.isEmpty ? null : _resolveUrl(item.url),
+                      fileName: type == MediaType.document
+                          ? 'Mohammed_Ibrahim_CV.pdf'
+                          : null,
+                    );
+                  },
+                ),
               );
-            },
-          ),
+            }
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );

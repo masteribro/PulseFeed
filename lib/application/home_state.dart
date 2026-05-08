@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../data/media_storage.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
@@ -9,12 +10,23 @@ abstract class HomeState extends Equatable {
 
 class HomeInitial extends HomeState {}
 
-class HomeAudioState extends HomeState {
-  final bool isPlaying;
-  const HomeAudioState(this.isPlaying);
+class HomeFeedLoading extends HomeState {}
+
+class HomeFeedLoaded extends HomeState {
+  final List<MediaStorage> items;
+  const HomeFeedLoaded(this.items);
 
   @override
-  List<Object?> get props => [isPlaying];
+  List<Object?> get props => [items];
+}
+
+class HomeAudioState extends HomeState {
+  final bool isPlaying;
+  final bool isLoading;
+  const HomeAudioState(this.isPlaying, {this.isLoading = false});
+
+  @override
+  List<Object?> get props => [isPlaying, isLoading];
 }
 
 class HomeVideoState extends HomeState {

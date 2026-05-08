@@ -41,16 +41,16 @@ class DocumentPreview extends StatelessWidget {
                   color: Colors.red,
                 ),
                 onPressed: () async {
-                  const assetPath = 'assets/docs/Mohammed_Ibrahim_CV.pdf';
+                  final cubit = context.read<HomeCubit>();
 
-                  // Load document and get file path
-                  final filePath = await context
-                      .read<HomeCubit>()
-                      .documentViewer
-                      .loadDocumentFromAssets(assetPath, fileName ?? 'document.pdf');
+                  final filePath = mediaUrl != null
+                      ? await cubit.downloadDocumentFromUrl(
+                          mediaUrl!, fileName ?? 'document.pdf')
+                      : await cubit.documentViewer.loadDocumentFromAssets(
+                          'assets/docs/Mohammed_Ibrahim_CV.pdf',
+                          fileName ?? 'document.pdf');
 
                   if (filePath != null && context.mounted) {
-                    // Navigate to custom document viewer
                     Navigator.push(
                       context,
                       MaterialPageRoute(
